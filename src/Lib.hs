@@ -62,9 +62,18 @@ parseList ts =
     where (el,ts1) = parse ts
           (remainder,ts2) = parseList ts1
 
+eval :: Atom -> Atom
+eval (LList ((Symbol s):args))
+    | s == "foo" = LNumber 5
+    | otherwise = error $ "Undefined function " ++ s
+eval (LList (a:args)) = error $ "First argument must be function name, instead got " ++ (show a)
+eval x = x
+
 someFunc :: IO ()
 someFunc = do
     let t = tokenize "(add 4 (sub -7 8))"
     print t
-    print $ fst $ parse $ tokenize "(foo    bar)"
+    let parsed = fst $ parse $ tokenize "(foo    bar)"
+    print parsed
+    print $ eval parsed
     return ()
