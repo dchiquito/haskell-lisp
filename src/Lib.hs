@@ -41,7 +41,11 @@ tokenize text =
 type Symbol = String
 type LNumber = Int
 type LList = [Atom]
-data Atom = Symbol Symbol | LNumber LNumber | LList LList deriving (Eq, Show)
+data Atom = Symbol Symbol | LNumber LNumber | LList LList deriving (Eq)
+instance Show Atom where
+    show (Symbol s) = s
+    show (LNumber n) = show n
+    show (LList l) = "(" ++ (foldl (\l r -> l ++ " " ++ r) "" $ map show l) ++ " )"
 
 parse :: Tokens -> (Atom, Tokens)
 parse ((STR first):ts) = (Symbol first,ts) -- TODO cast ints
@@ -59,10 +63,8 @@ parseList ts =
           (remainder,ts2) = parseList ts1
 
 someFunc :: IO ()
--- someFunc = putStrLn "someFunc"
 someFunc = do
     let t = tokenize "(add 4 (sub -7 8))"
     print t
-    print $ parse [LPAREN,STR "foo",RPAREN]
-    print $ parse [RPAREN]
+    print $ fst $ parse $ tokenize "(foo    bar)"
     return ()
