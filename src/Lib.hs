@@ -46,8 +46,13 @@ instance Show Atom where
     show (Symbol s) = s
     show (LNumber n) = show n
     -- show (LList l) = "(" ++ (foldl (\l r -> l ++ " " ++ r) "" $ map show l) ++ " )"
-    show (Cons (a, b)) = (show a) ++ " . " ++ (show b)
+    show (Cons cons) = "'(" ++ showCdr (Cons cons)
     show Nil = "nil"
+
+showCdr :: Atom -> String
+showCdr (Cons (car, cdr)) = (show car) ++ " " ++ (showCdr cdr)
+showCdr Nil = ")"
+showCdr atom = ". " ++ (show atom) ++ ")"
 
 parse :: Tokens -> (Atom, Tokens)
 parse ((STR first):ts) = (Symbol first,ts) -- TODO cast ints
@@ -57,6 +62,7 @@ parse bad = error $ "Invalid expression " ++ show bad
 -- parse a list, starting with its first element and stopping at )
 parseList :: Tokens -> (Atom, Tokens) -- ??? maybe this should be typed cons and cons should also include nil
 parseList (RPAREN:ts) = (Nil, ts)
+parseList (DOT:ts) = parse ts
 parseList ts =
     (Cons (el,remainder), ts2)
     where (el,ts1) = parse ts
@@ -73,7 +79,7 @@ someFunc :: IO ()
 someFunc = do
     let t = tokenize "(add 4 (sub -7 8))"
     print t
-    let parsed = fst $ parse $ tokenize "(foo    bar)"
+    let parsed = fst $ parse $ tokenize "(foo  ( f .  bar))"
     print parsed
     print $ eval parsed
     return ()
