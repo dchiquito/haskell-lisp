@@ -40,33 +40,33 @@ tokenize text =
 
 type Symbol = String
 type LNumber = Int
-type LList = [Atom]
-data Atom = Symbol Symbol | LNumber LNumber | LList LList deriving (Eq)
+type Cons = (Atom, Atom)
+data Atom = Symbol Symbol | LNumber LNumber | Cons Cons | Nil deriving (Eq)
 instance Show Atom where
     show (Symbol s) = s
     show (LNumber n) = show n
-    show (LList l) = "(" ++ (foldl (\l r -> l ++ " " ++ r) "" $ map show l) ++ " )"
+    -- show (LList l) = "(" ++ (foldl (\l r -> l ++ " " ++ r) "" $ map show l) ++ " )"
+    show (Cons (a, b)) = (show a) ++ " . " ++ (show b)
+    show Nil = "nil"
 
 parse :: Tokens -> (Atom, Tokens)
 parse ((STR first):ts) = (Symbol first,ts) -- TODO cast ints
-parse (LPAREN:tokens) =
-    (LList lst, ts)
-    where (lst, ts) = parseList tokens
+parse (LPAREN:tokens) = parseList tokens
 parse bad = error $ "Invalid expression " ++ show bad
 
 -- parse a list, starting with its first element and stopping at )
-parseList :: Tokens -> (LList, Tokens)
-parseList (RPAREN:ts) = ([], ts)
+parseList :: Tokens -> (Atom, Tokens) -- ??? maybe this should be typed cons and cons should also include nil
+parseList (RPAREN:ts) = (Nil, ts)
 parseList ts =
-    (el:remainder, ts2)
+    (Cons (el,remainder), ts2)
     where (el,ts1) = parse ts
           (remainder,ts2) = parseList ts1
 
 eval :: Atom -> Atom
-eval (LList ((Symbol s):args))
+eval (Cons (Symbol s, args))
     | s == "foo" = LNumber 5
     | otherwise = error $ "Undefined function " ++ s
-eval (LList (a:args)) = error $ "First argument must be function name, instead got " ++ (show a)
+eval (Cons (a, args)) = error $ "First argument must be function name, instead got " ++ (show a)
 eval x = x
 
 someFunc :: IO ()
